@@ -69,6 +69,25 @@ public:
      * Gets a parent value and a child node.
     */
     void add_sub_node(const T& parentValue, const Node<T>& childNode);
+
+    // ------------------------ print_tree() ------------------------
+    void print_tree(); // GUI function
+
+private:    // helpers
+    /*
+     * Find a node with a specific value in the tree.
+     * Gets a node and a value to search for under him.
+     * Returns the node with the value or nullptr if not found.
+    */
+    Node<T>* find_node(Node<T>* node, const T& value);
+
+    /*
+     * Print the tree in a GUI format?
+     * Gets a node and a depth to print the node at.
+    */
+    void print_node(Node<T>* node, int depth);
+
+public: // Iterators
     
     // NOTE: All iterators, including their classes and implementations,
     // are writen in the Tree.hpp file to avoid annoying template stuff and shorten the code.
@@ -87,7 +106,8 @@ public:
                 // No need to implement both separately
                 if (stack.empty()){
                     current = nullptr;
-                } else {
+                }
+                else {
                     current = stack.top();
                     stack.pop();
                     // goes over children in reverse order (right to left)
@@ -124,6 +144,9 @@ public:
             }
     };
 
+    // NOTE: for all begin_iter, end_iter functions:
+    // Could add a check for K == 2 and K > 2,
+    // create a general iterator and return it on top of PreOrderIterator or DFSIterator according to K
     PreOrderIterator begin_pre_order(){
         return PreOrderIterator(root);
     }
@@ -140,7 +163,8 @@ public:
             void advance(){
                 if (stack.empty()){
                     current = nullptr;
-                } else {
+                }
+                else {
                     // for K == 2, the stack is already set, we just pop the top each advance call
                     current = stack.top();
                     stack.pop();
@@ -224,36 +248,266 @@ public:
 
     // ------------------------ InOrderIterator ------------------------
     class InOrderIterator {
-        // TODO CONTINUE HERE
+        private:    // by default
+            Node<T>* current;
+            std::stack<Node<T>*> stack;
+
+            void advance(){
+                vector<Node<T>*> children = current->get_children();
+                if (K == 2) { // InOrder
+                    // stack was set in constructor to mostleft, here we push the right children and all his left children
+                    if (children.size() > 1) {
+                        push_left(children[1]);
+                    }
+                } else if (K > 2) { // DFS
+                    // for all children in reverse order (right to left), push them and their children
+                    for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                        stack.push(*it);
+                    }
+                }
+                // update current to the next mostleft or DFS node
+                if (!stack.empty()) {
+                    current = stack.top();
+                    stack.pop();
+                }
+                else {
+                    current = nullptr;
+                }
+            }
+
+            // Used for K == 2 only,
+            // This simply pushes all left children until null, to set current on the leftmost node
+            void push_left(Node<T>* node) {
+                while (node != nullptr) {
+                    stack.push(node);
+                    vector<Node<T>*> children = node->get_children();
+                    if (children.size() > 0) {  // push left child
+                        node = children[0];
+                    }
+                    else {
+                        node = nullptr;     // to break loop
+                    }
+                }
+            }
+        public:
+            InOrderIterator(Node<T>* root){
+                if (root != nullptr){
+                    if (K == 2){
+                        // set stack to the leftmost path to null - pushes all left children until null
+                        push_left(root);
+                    }
+                    else {      // DFS for K > 2
+                        if (node != nullptr) {
+                            nodeStack.push(node);
+                        }
+                    }
+                }
+                advance();  // sets current to the first node (top of stack). if root is null, sets current to null
+            }
+            InOrderIterator& operator++(){
+                advance();
+                return *this;
+            }
+            InOrderIterator operator++(int){
+                InOrderIterator temp = *this;
+                advance();
+                return temp;
+            }
+            bool operator==(const InOrderIterator& other) const{
+                return current == other.current && stack == other.stack;
+            }
+            bool operator!=(const InOrderIterator& other) const{
+                return !(*this == other);
+            }
+            Node<T>& operator*(){
+                return *current;
+            }
+            Node<T>* operator->(){
+                return current;
+            }
     };
 
+    InOrderIterator begin_in_order(){
+        return InOrderIterator(root);
+    }
+    InOrderIterator end_in_order(){
+        return InOrderIterator(nullptr);
+    
+    }
 
-    InOrderIterator begin_in_order();
-    InOrderIterator end_in_order();
+    // ------------------------ BFSIterator ------------------------
+    class BFSIterator {
+        private:    // by default
+            Node<T>* current;
+            // we are using a queue to access the nodes in the order they were added
+            // (That way we always add all the children but access the parents first) - BFS
+            std::queue<Node<T>*> queue;
 
-    BFSIterator begin_bfs_scan();
-    BFSIterator end_bfs_scan();
+            void advance(){
+                if (queue.empty()){
+                    current = nullptr;
+                }
+                else {
+                    current = queue.front();
+                    queue.pop();
+                    vector<Node<T>*> children = current->get_children();
+                    // add them from left to right, because we are using a queue so we pop them in the same order as we push them
+                    for (auto it = children.begin(); it != children.end(); ++it){
+                        queue.push(*it);
+                    }
+                }
+            }
+        public:
+            BFSIterator(Node<T>* root){
+                queue.push(root);
+                advance();      // deals with root = null case, sets current to the first node
+            }
+            BFSIterator& operator++(){
+                advance();
+                return *this;
+            }
+            BFSIterator operator++(int){
+                BFSIterator temp = *this;
+                advance();
+                return temp;
+            }
+            bool operator==(const BFSIterator& other) const{
+                return current == other.current && queue == other.queue;
+            }
+            bool operator!=(const BFSIterator& other) const{
+                return !(*this == other);
+            }
+            Node<T>& operator*(){
+                return *current;
+            }
+            Node<T>* operator->(){
+                return current;
+            }
+    };
 
-    DFSIterator begin_dfs_scan();
-    DFSIterator end_dfs_scan();
+    BFSIterator begin_bfs_scan(){
+        return BFSIterator(root);
+    }
+    BFSIterator end_bfs_scan(){
+        return BFSIterator(nullptr);
+    }
 
-    void myHeap();
+    // ------------------------ DFSIterator ------------------------
+    class DFSIterator {
+        private:    // by default
+            Node<T>* current;
+            std::stack<Node<T>*> stack;
 
-    void print_tree(); // GUI function
+            void advance(){
+                if (stack.empty()){
+                    current = nullptr;
+                }
+                else {
+                    current = stack.top();
+                    stack.pop();
+                    vector<Node<T>*> children = current->get_children();
+                    // push all children in reverse order (right to left)
+                    // same as we done in Pre Post In Order for K == 2, but now for all K
+                    for (auto it = children.rbegin(); it != children.rend(); ++it){
+                        stack.push(*it);
+                    }
+                }
+            }
+        public:
+            DFSIterator(Node<T>* root){
+                stack.push(root);
+                advance();      // deals with root = null case, sets current to the first node
+            }
+            DFSIterator& operator++(){
+                advance();
+                return *this;
+            }
+            DFSIterator operator++(int){
+                DFSIterator temp = *this;
+                advance();
+                return temp;
+            }
+            bool operator==(const DFSIterator& other) const{
+                return current == other.current && stack == other.stack;
+            }
+            bool operator!=(const DFSIterator& other) const{
+                return !(*this == other);
+            }
+            Node<T>& operator*(){
+                return *current;
+            }
+            Node<T>* operator->(){
+                return current;
+            }
+    };
 
-private:
-    /*
-     * Find a node with a specific value in the tree.
-     * Gets a node and a value to search for under him.
-     * Returns the node with the value or nullptr if not found.
-    */
-    Node<T>* find_node(Node<T>* node, const T& value);
+    DFSIterator begin_dfs_scan(){
+        return DFSIterator(root);
+    }
+    DFSIterator end_dfs_scan(){
+        return DFSIterator(nullptr);
+    }
 
-    /*
-     * Print the tree in a GUI format?
-     * Gets a node and a depth to print the node at.
-    */
-    void print_node(Node<T>* node, int depth);
+    // ------------------------ HeapIterator ------------------------
+    class HeapIterator {
+        private:    // by default
+            size_t index;
+            vector<Node<T>*> heap;
+
+            void advance(){
+                // if there are still nodes, pop the smallest from heap and increment index
+                if (index < heap.size() - 1) {
+                    // pop the top node (smallest) and push the next node
+                    std::pop_heap(heap.begin(), heap.end() - index, std::greater<Node<T>>());
+                    index++;
+                }
+            }
+
+            // Pushes all nodes to the vector
+            void initHeap(Node<T>* node){
+                if (node != nullptr){
+                    heap.push(root);
+                    vector<Node<T>*> children = node->get_children();
+                    for (auto it = children.begin(); it != children.end(); ++it){
+                        // push all children to the vector
+                        initHeap(*it);
+                    }
+                }
+            }
+        public:
+            HeapIterator(Node<T>* root) : index(0) {
+                initHeap(root);
+                // Using standart lib (allowed in assignment) https://www.geeksforgeeks.org/cpp-stl-heap/
+                // make_help() makes our vector a heap, with the comparison we get a min heap
+                // Note: We overloaded comparison operator > >= etc. for Node<T> to compare the values
+                std::make_heap(heap.begin(), heap.end(), std::greater<Node<T>>());
+            }
+            HeapIterator& operator++(){
+                advance();
+                return *this;
+            }
+            HeapIterator operator++(int){
+                HeapIterator temp = *this;
+                advance();
+                return temp;
+            }
+            bool operator==(const HeapIterator& other) const{
+                return index == other.index && heap == other.heap;
+            }
+            bool operator!=(const HeapIterator& other) const{
+                return !(*this == other);
+            }
+            Node<T>& operator*(){
+                return heap[index];
+            }
+            Node<T>* operator->(){
+                return &heap[index];
+            }
+    };
+
+    HeapIterator myHeap(){
+        return HeapIterator(root);
+    }
 };
 
 #endif // TREE_HPP
