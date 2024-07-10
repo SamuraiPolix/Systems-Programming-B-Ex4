@@ -23,8 +23,9 @@ Node<T>::Node(const Node<T>& other, size_t numChildren) : children.reserve(numCh
 
 template <typename T>
 Node<T>::~Node() {
+    // delete all children nodes
     for (auto child : children) {
-        if (child != nullptr){      // should really be null in practice but just in case
+        if (child != nullptr){      // shouldnt really be null in practice but just in case
             delete child;
         }
     }

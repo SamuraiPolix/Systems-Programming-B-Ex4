@@ -8,8 +8,10 @@ Tree<T, K>::Tree() : root(nullptr) {}
 
 template <typename T, size_t K>
 Tree<T, K>::~Tree() {
+    // This calls the destructor of Node class (which deletes all children as well)
+    // So it's a sort of recursive deletion of all nodes in the tree
     if (root != nullptr) {
-        delete root;
+        delete root;        
     }
 }
 
