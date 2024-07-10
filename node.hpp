@@ -27,6 +27,14 @@ public:
 
     void add_child(Node<T>& child);
     void remove_child(Node<T>& child);
+
+    // Comparison operators to use in HeapIterator
+    bool operator<(const Node<T>& other) const;
+    bool operator>(const Node<T>& other) const;
+    bool operator==(const Node<T>& other) const;
+    bool operator!=(const Node<T>& other) const;
+    bool operator<=(const Node<T>& other) const;
+    bool operator>=(const Node<T>& other) const;
 };
 
 #endif // NODE_HPP

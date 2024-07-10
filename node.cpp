@@ -78,6 +78,36 @@ void Node<T>::remove_child(Node<T>& child) {
     }
 }
 
+template <typename T>
+bool Node<T>::operator<(const Node<T>& other) const {
+    return value < other.get_value();
+}
+
+template <typename T>
+bool Node<T>::operator>(const Node<T>& other) const {
+    return value > other.get_value();
+}
+
+template <typename T>
+bool Node<T>::operator==(const Node<T>& other) const {
+    return value == other.get_value();
+}
+
+template <typename T>
+bool Node<T>::operator!=(const Node<T>& other) const {
+    return value != other.get_value();
+}
+
+template <typename T>
+bool Node<T>::operator<=(const Node<T>& other) const {
+    return value <= other.get_value();
+}
+
+template <typename T>
+bool Node<T>::operator>=(const Node<T>& other) const {
+    return value >= other.get_value();
+}
+
 // Explicit template instantiation
 template class Node<int>;
 template class Node<Complex>;
