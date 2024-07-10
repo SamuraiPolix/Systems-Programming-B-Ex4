@@ -6,6 +6,24 @@
 #include <iterator>
 #include <queue>
 #include <stack>
+#include <algorithm>
+#include <vector>
+
+using std::vector, std::cout, std::endl, std::ostream;
+
+template<typename T>
+struct NodePtrComparator {
+    // uses our overloaded < operator in Node<T>
+    bool operator()(Node<T>* a, Node<T>* b) const {
+        return *a < *b; 
+    }
+};
+
+/*
+ * Template is all implemented in the .hpp file because we don't want problems with instantiating the template
+ * If the template is entirely defined in the header file and included wherever it's used,
+ * the compiler can instantiate the template wherever it's included without the need to explicitly instantiate it in the .cpp file.
+ */
 
 template <typename T, size_t K = 2>     // default to binary tree (2 max children) if not specified
 class Tree {
@@ -15,8 +33,8 @@ private:        // by default
 
 public:
     // ------------------------ Constructors & Destructors ------------------------
-    Tree();
-    ~Tree();
+    Tree() : root(nullptr) {}       // inline
+    ~Tree() = default;     // no dynamic memory to delete
 
     // NOTE: We are overloading a lot of functions to allow working with both Node objects and values.
 
@@ -27,14 +45,26 @@ public:
      * If a root already exists, delete it and add the new root.
      * Gets a Node object.
     */
-    void add_root(const Node<T>& node);
+    void add_root(Node<T>& node) {
+        if (root != nullptr) {
+            cout << "Deleting root node to set new root node" << endl;
+            delete root;
+        }
+        root = &node;
+    }
 
     /*
      * Add a root node to the tree.
      * If a root already exists, delete it and add the new root.
      * Gets a value to create a new Node object.
     */
-    void add_root(const T& value);
+    void add_root(const T& value) {
+        if (root != nullptr) {
+            cout << "Deleting root node to set new root node" << endl;
+            delete root;
+        }
+        root = new Node<T>(value);
+    }
 
     // ------------------------ add_sub_node() ------------------------
 
@@ -44,7 +74,22 @@ public:
      * If the parent node has maxChildren children, throw exception.
      * Gets a parent node and a child node.
     */
-    void add_sub_node(const Node<T>& parentNode, const Node<T>& childNode);
+    void add_sub_node(Node<T>& parentNode, Node<T>& childNode){
+        if (parentNode.getChildrenSize() >= K) {
+            throw std::runtime_error("Parent node has max children, cannot add child node");
+        }
+        // make sure parent node is in the tree, before adding child node
+        Node<T>* parentPointer = find_node(root, parentNode.get_value());
+        if (parentPointer != nullptr) {
+            if (parentPointer->getChildrenSize() >= K) {
+                throw std::runtime_error("Parent node has max children, cannot add child node");
+            }
+            parentPointer->add_child(childNode);
+        }
+        else {
+            throw std::runtime_error("Parent node does not exist, cannot add child node");
+        }
+    }
 
     /*
      * Add a child node to a parent node.
@@ -52,28 +97,72 @@ public:
      * If the parent node has maxChildren children, throw exception.
      * Gets a parent value and a child value.
     */
-    void add_sub_node(const T& parentValue, const T& childValue);
-
+    void add_sub_node(T& parentValue, T& childValue){
+        // make sure parent node is in the tree, before adding child node
+        Node<T>* parentPointer = find_node(root, parentValue);
+        if (parentPointer != nullptr) {
+            if (parentPointer->getChildrenSize() >= K) {
+                throw std::runtime_error("Parent node has max children, cannot add child node");
+            }
+            parentPointer->add_child(Node<T>(childValue));
+        }
+        else {
+            throw std::runtime_error("Parent node does not exist, cannot add child node");
+        }
+    }
     /*
      * Add a child node to a parent node.
      * If the parent node does not exist, throw exception.
      * If the parent node has maxChildren children, throw exception.
      * Gets a parent node and a value to create a new Node object.
     */
-    void add_sub_node(const Node<T>& parentNode, const T& childValue);
-
+    void add_sub_node(Node<T>& parentNode, T& childValue){
+        if (parentNode.get_children().size() >= K) {
+            throw std::runtime_error("Parent node has max children, cannot add child node");
+        }
+        // make sure parent node is in the tree, before adding child node
+        Node<T>* parentPointer = find_node(root, parentNode.get_value());
+        if (parentPointer != nullptr) {
+            if (parentPointer->getChildrenSize() >= K) {
+                throw std::runtime_error("Parent node has max children, cannot add child node");
+            }
+            parentPointer->add_child(Node<T>(childValue));
+        }
+        else {
+            throw std::runtime_error("Parent node does not exist, cannot add child node");
+        }
+    }
     /*
      * Add a child node to a parent node.
      * If the parent node does not exist, throw exception.
      * If the parent node has maxChildren children, throw exception.
      * Gets a parent value and a child node.
     */
-    void add_sub_node(const T& parentValue, const Node<T>& childNode);
-
+    void add_sub_node(T& parentValue, Node<T>& childNode){
+        // make sure parent node is in the tree, before adding child node
+        Node<T>* parentPointer = find_node(root, parentValue);
+        if (parentPointer != nullptr) {
+            if (parentPointer->getChildrenSize() >= K) {
+                throw std::runtime_error("Parent node has max children, cannot add child node");
+            }
+            parentPointer->add_child(childNode);
+        }
+        else {
+            throw std::runtime_error("Parent node does not exist, cannot add child node");
+        }
+    }
+    
     // ------------------------ print_tree() ------------------------
-    void print_tree(); // GUI function
+    // Should be the GUI function
+    void print_tree() const {
+        print_node(root, 0);
+    }
 
-    friend ostream& operator<<(ostream& os, const Tree<T, K>& tree);
+    friend std::ostream& operator<<(std::ostream& os, const Tree<T, K>& tree) {
+        // As said in the requirements, this should print the tree in a GUI format, no usage for os
+        tree.print_tree();
+        return os;
+    }
 
 private:    // helpers
     /*
@@ -81,28 +170,51 @@ private:    // helpers
      * Gets a node and a value to search for under him.
      * Returns the node with the value or nullptr if not found.
     */
-    Node<T>* find_node(Node<T>* node, const T& value);
-
+    Node<T>* find_node(Node<T>* node, const T& value) {
+        if (node == nullptr) {
+            return nullptr;
+        }
+        if (node->get_value() == value) {      // found the node
+            return node;
+        }
+        vector<Node<T>*> children = node->get_children();
+        for (auto child : children) {
+            // recursively search for the node in the children
+            Node<T>* result = find_node(child, value);
+            if (result != nullptr) {
+                return result;
+            }
+        }
+        // went through all children and didnt find the node
+        return nullptr;
+    }
     /*
      * Print the tree in a GUI format?
      * Gets a node and a depth to print the node at.
     */
-    void print_node(Node<T>* node, int depth);
+    void print_node(Node<T>* node, size_t depth) const {
+        if (node == nullptr) {
+            return;
+        }
+
+        // Print the current node
+        for (size_t i = 0; i < depth; ++i) {
+            cout << "    ";
+        }
+        cout << "|-- " << node->get_value() << endl;
+
+        // Print the children recursively
+        vector<Node<T>*> children = node->get_children();
+        for (auto child : children) {
+            print_node(child, depth + 1);
+        }
+    }
 
 public: // Iterators
     
     // NOTE: All iterators, including their classes and implementations,
     // are writen in the Tree.hpp file to avoid annoying template stuff and shorten the code.
     // TODO MAKE CLASSES PRIVATE AND ADD DECLARATIONS IN THE PUBLIC SECTION
-
-    // ------------------------ Iterator ------------------------
-    // This is used to allow for-each loop on tree (as seen in Demo.cpp). Required by assignment to return BFS>.
-    BFSIterator begin() {
-        return begin_bfs_scan();
-    }
-    BFSIterator end() {
-        return end_bfs_scan();
-    }
     
     // ------------------------ PreOrderIterator ------------------------
     class PreOrderIterator {
@@ -122,8 +234,11 @@ public: // Iterators
                     current = stack.top();
                     stack.pop();
                     // goes over children in reverse order (right to left)
-                    for (auto it = current->get_children().rbegin(); it != current->get_children().rend(); ++it){
-                        stack.push(*it);
+                    if (current != nullptr) {
+                        vector<Node<T>*> children = current->get_children();
+                        for (auto it = children.rbegin(); it != children.rend(); ++it){
+                            stack.push(*it);
+                        }
                     }
                 }
             }
@@ -264,18 +379,21 @@ public: // Iterators
             std::stack<Node<T>*> stack;
 
             void advance(){
-                vector<Node<T>*> children = current->get_children();
-                if (K == 2) { // InOrder
-                    // stack was set in constructor to mostleft, here we push the right children and all his left children
-                    if (children.size() > 1) {
-                        push_left(children[1]);
-                    }
-                } else if (K > 2) { // DFS
-                    // for all children in reverse order (right to left), push them and their children
-                    for (auto it = children.rbegin(); it != children.rend(); ++it) {
-                        stack.push(*it);
+                if (current != nullptr){
+                    vector<Node<T>*> children = current->get_children();
+                    if (K == 2) { // InOrder
+                        // stack was set in constructor to mostleft, here we push the right children and all his left children
+                        if (children.size() > 1) {
+                            push_left(children[1]);
+                        }
+                    } else if (K > 2) { // DFS
+                        // for all children in reverse order (right to left), push them and their children
+                        for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                            stack.push(*it);
+                        }
                     }
                 }
+                
                 // update current to the next mostleft or DFS node
                 if (!stack.empty()) {
                     current = stack.top();
@@ -302,14 +420,15 @@ public: // Iterators
             }
         public:
             InOrderIterator(Node<T>* root){
+                current = nullptr;
                 if (root != nullptr){
                     if (K == 2){
                         // set stack to the leftmost path to null - pushes all left children until null
                         push_left(root);
                     }
                     else {      // DFS for K > 2
-                        if (node != nullptr) {
-                            nodeStack.push(node);
+                        if (root != nullptr) {
+                            stack.push(root);
                         }
                     }
                 }
@@ -361,11 +480,14 @@ public: // Iterators
                 else {
                     current = queue.front();
                     queue.pop();
-                    vector<Node<T>*> children = current->get_children();
-                    // add them from left to right, because we are using a queue so we pop them in the same order as we push them
-                    for (auto it = children.begin(); it != children.end(); ++it){
-                        queue.push(*it);
+                    if (current != nullptr) {
+                        vector<Node<T>*> children = current->get_children();
+                        // add them from left to right, because we are using a queue so we pop them in the same order as we push them
+                        for (auto it = children.begin(); it != children.end(); ++it){
+                            queue.push(*it);
+                        }
                     }
+                    
                 }
             }
         public:
@@ -416,12 +538,15 @@ public: // Iterators
                 else {
                     current = stack.top();
                     stack.pop();
-                    vector<Node<T>*> children = current->get_children();
-                    // push all children in reverse order (right to left)
-                    // same as we done in Pre Post In Order for K == 2, but now for all K
-                    for (auto it = children.rbegin(); it != children.rend(); ++it){
-                        stack.push(*it);
+                    if (current != nullptr){
+                        vector<Node<T>*> children = current->get_children();
+                        // push all children in reverse order (right to left)
+                        // same as we done in Pre Post In Order for K == 2, but now for all K
+                        for (auto it = children.rbegin(); it != children.rend(); ++it){
+                            stack.push(*it);
+                        }
                     }
+                    
                 }
             }
         public:
@@ -464,12 +589,13 @@ public: // Iterators
         private:    // by default
             size_t index;
             vector<Node<T>*> heap;
+            NodePtrComparator<T> comparator;
 
             void advance(){
                 // if there are still nodes, pop the smallest from heap and increment index
                 if (index < heap.size() - 1) {
                     // pop the top node (smallest) and push the next node
-                    std::pop_heap(heap.begin(), heap.end() - index, std::greater<Node<T>>());
+                    std::pop_heap(heap.begin(), heap.end() - static_cast<typename std::vector<Node<T>*>::difference_type>(index), comparator);
                     index++;
                 }
             }
@@ -477,7 +603,7 @@ public: // Iterators
             // Pushes all nodes to the vector
             void initHeap(Node<T>* node){
                 if (node != nullptr){
-                    heap.push(root);
+                    heap.push_back(node);
                     vector<Node<T>*> children = node->get_children();
                     for (auto it = children.begin(); it != children.end(); ++it){
                         // push all children to the vector
@@ -486,12 +612,12 @@ public: // Iterators
                 }
             }
         public:
-            HeapIterator(Node<T>* root) : index(0) {
+            HeapIterator(Node<T>* root) : index(0), comparator(NodePtrComparator<T>()){
                 initHeap(root);
                 // Using standart lib (allowed in assignment) https://www.geeksforgeeks.org/cpp-stl-heap/
                 // make_help() makes our vector a heap, with the comparison we get a min heap
                 // Note: We overloaded comparison operator > >= etc. for Node<T> to compare the values
-                std::make_heap(heap.begin(), heap.end(), std::greater<Node<T>>());
+                std::make_heap(heap.begin(), heap.end(), comparator);
             }
             HeapIterator& operator++(){
                 advance();
@@ -509,15 +635,24 @@ public: // Iterators
                 return !(*this == other);
             }
             Node<T>& operator*(){
-                return heap[index];
+                return *heap[index];
             }
             Node<T>* operator->(){
-                return &heap[index];
+                return heap[index];
             }
     };
 
     HeapIterator myHeap(){
         return HeapIterator(root);
+    }
+
+    // ------------------------ Iterator ------------------------
+    // This is used to allow for-each loop on tree (as seen in Demo.cpp). Required by assignment to return BFS>.
+    BFSIterator begin() {
+        return begin_bfs_scan();
+    }
+    BFSIterator end() {
+        return end_bfs_scan();
     }
 };
 

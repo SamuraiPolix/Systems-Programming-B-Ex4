@@ -4,20 +4,20 @@ CXX=clang
 CXXFLAGS=-std=c++17 -Werror -Wsign-conversion -g
 VALGRIND_FLAGS=-v --leak-check=full --show-leak-kinds=all  --error-exitcode=99
 
-SOURCES=tree.cpp node.cpp complex.cpp
-CODE_SOURCES=tree.cpp node.cpp complex.cpp
-OBJECTS=$(subst .cpp,.o,$(SOURCES))
+DEPS=node.h tree.h complex.h
+CODE_SOURCES=tree.cpp node.cpp
 
-# run: tree
-# 	./$^
+all: demo test tree
 
-tree: Main.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $^ -o tree -lstdc++
+.PHONY: all clean tree tidy valgrind
 
-demo: Demo.o $(OBJECTS)
+tree: demo
+	./demo
+
+demo: Demo.o
 	$(CXX) $(CXXFLAGS) $^ -o demo -lstdc++
 
-test: TestCounter.o Test.o $(OBJECTS)
+test: Test.o $(DEPS)
 	$(CXX) $(CXXFLAGS) $^ -o test -lstdc++
 
 tidy:
@@ -32,4 +32,4 @@ valgrind: demo test
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o demo test tree
+	rm -f *.o demo test
