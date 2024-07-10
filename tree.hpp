@@ -73,6 +73,8 @@ public:
     // ------------------------ print_tree() ------------------------
     void print_tree(); // GUI function
 
+    friend ostream& operator<<(ostream& os, const Tree<T, K>& tree);
+
 private:    // helpers
     /*
      * Find a node with a specific value in the tree.
@@ -92,6 +94,15 @@ public: // Iterators
     // NOTE: All iterators, including their classes and implementations,
     // are writen in the Tree.hpp file to avoid annoying template stuff and shorten the code.
     // TODO MAKE CLASSES PRIVATE AND ADD DECLARATIONS IN THE PUBLIC SECTION
+
+    // ------------------------ Iterator ------------------------
+    // This is used to allow for-each loop on tree (as seen in Demo.cpp). Required by assignment to return BFS>.
+    BFSIterator begin() {
+        return begin_bfs_scan();
+    }
+    BFSIterator end() {
+        return end_bfs_scan();
+    }
     
     // ------------------------ PreOrderIterator ------------------------
     class PreOrderIterator {

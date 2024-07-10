@@ -112,3 +112,4 @@ bool Node<T>::operator>=(const Node<T>& other) const {
 // Explicit template instantiation
 template class Node<int>;
 template class Node<Complex>;
+template class Node<double>;
