@@ -1,4 +1,10 @@
-/**
+/*
+ * Email: sam.lazareanu@gmail.com
+ * ID: ****6281
+ * @SamuraiPolix - Samuel Lazareanu
+*/
+
+/*
  * Demo app for Ex4
  */
 #include <iostream>
@@ -80,6 +86,14 @@ int main()
         cout << node.get_value() << ", ";
     } // same as BFS: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
 
+    cout << endl;
+
+    cout << "Heap:" << endl;
+    for (auto node = tree.myHeap(); node != tree.end_heap(); ++node)
+    {
+        cout << node->get_value() << ", ";
+    } // prints: 1.6, 1.5, 1.4, 1.3, 1.2, 1.1
+
     cout << endl << endl;
 
     cout << tree << endl; // Should print the graph using GUI.
@@ -109,5 +123,24 @@ int main()
      *   /        |
      *  1.5      1.6
      */
-    
+
+    // Demo with Complex
+    Node<Complex> root_node3 = Node<Complex>(Complex(1.1, 2.2));
+    Node<Complex> n111 = Node<Complex>(Complex(1.2, 2.3));
+    Node<Complex> n222 = Node<Complex>(Complex(1.3, 2.4));
+    Node<Complex> n333 = Node<Complex>(Complex(1.4, 2.5));
+    Node<Complex> n444 = Node<Complex>(Complex(1.5, 2.6));
+    Node<Complex> n555 = Node<Complex>(Complex(1.6, 2.7));
+
+    Tree<Complex> complex_tree; // binary by default
+    complex_tree.add_root(root_node3);
+    complex_tree.add_sub_node(root_node3, n111);
+    complex_tree.add_sub_node(root_node3, n222);
+    complex_tree.add_sub_node(n111, n333);
+    complex_tree.add_sub_node(n111, n444);
+    complex_tree.add_sub_node(n222, n555);
+
+    cout << complex_tree << endl; // Should print the graph using GUI.
+
+    return 0;   
 }

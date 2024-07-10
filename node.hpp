@@ -1,10 +1,15 @@
+/*
+ * Email: sam.lazareanu@gmail.com
+ * ID: ****6281
+ * @SamuraiPolix - Samuel Lazareanu
+*/
+
 #ifndef NODE_HPP
 #define NODE_HPP
 
 #include <vector>
 #include "complex.hpp"
 #include <stdexcept>
-#include <typeinfo>
 
 using std::vector, std::size_t, std::runtime_error;
 
@@ -63,9 +68,6 @@ public:
         // check many things to make sure the child is valid before adding
         if (child == *this) {
             throw runtime_error("Cannot add node as child to itself");
-        }
-        if (typeid(child) != typeid(Node<T>)) {
-            throw runtime_error("Types do not match, cannot add child node");
         }
         // check if child already exists
         for (auto c : children) {

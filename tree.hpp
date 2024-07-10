@@ -1,3 +1,9 @@
+/*
+ * Email: sam.lazareanu@gmail.com
+ * ID: ****6281
+ * @SamuraiPolix - Samuel Lazareanu
+*/
+
 #ifndef TREE_HPP
 #define TREE_HPP
 
@@ -8,6 +14,7 @@
 #include <stack>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 using std::vector, std::cout, std::endl, std::ostream;
 
@@ -51,6 +58,11 @@ public:
             delete root;
         }
         root = &node;
+    }
+
+    // Used for testing - not needed
+    Node<T>& get_root() const {
+        return *root;
     }
 
     /*
@@ -97,7 +109,7 @@ public:
      * If the parent node has maxChildren children, throw exception.
      * Gets a parent value and a child value.
     */
-    void add_sub_node(T& parentValue, T& childValue){
+    void add_sub_node(const T& parentValue, const T& childValue){
         // make sure parent node is in the tree, before adding child node
         Node<T>* parentPointer = find_node(root, parentValue);
         if (parentPointer != nullptr) {
@@ -587,16 +599,15 @@ public: // Iterators
     // ------------------------ HeapIterator ------------------------
     class HeapIterator {
         private:    // by default
-            size_t index;
             vector<Node<T>*> heap;
             NodePtrComparator<T> comparator;
 
             void advance(){
                 // if there are still nodes, pop the smallest from heap and increment index
-                if (index < heap.size() - 1) {
+                if (heap.size()> 0) {
                     // pop the top node (smallest) and push the next node
-                    std::pop_heap(heap.begin(), heap.end() - static_cast<typename std::vector<Node<T>*>::difference_type>(index), comparator);
-                    index++;
+                    std::pop_heap(heap.begin(), heap.end(), comparator);
+                    heap.pop_back();
                 }
             }
 
@@ -612,7 +623,7 @@ public: // Iterators
                 }
             }
         public:
-            HeapIterator(Node<T>* root) : index(0), comparator(NodePtrComparator<T>()){
+            HeapIterator(Node<T>* root) : comparator(NodePtrComparator<T>()){
                 initHeap(root);
                 // Using standart lib (allowed in assignment) https://www.geeksforgeeks.org/cpp-stl-heap/
                 // make_help() makes our vector a heap, with the comparison we get a min heap
@@ -629,21 +640,28 @@ public: // Iterators
                 return temp;
             }
             bool operator==(const HeapIterator& other) const{
-                return index == other.index && heap == other.heap;
+                return heap == other.heap;
             }
             bool operator!=(const HeapIterator& other) const{
                 return !(*this == other);
             }
             Node<T>& operator*(){
-                return *heap[index];
+                return *heap.front();
             }
             Node<T>* operator->(){
-                return heap[index];
+                return heap.front();
+            }
+            vector<Node<T>*> getHeap() const{
+                return heap;
             }
     };
 
     HeapIterator myHeap(){
         return HeapIterator(root);
+    }
+
+    HeapIterator end_heap(){
+        return HeapIterator(nullptr);
     }
 
     // ------------------------ Iterator ------------------------

@@ -1,4 +1,8 @@
-
+/*
+ * Email: sam.lazareanu@gmail.com
+ * ID: ****6281
+ * @SamuraiPolix - Samuel Lazareanu
+*/
 #ifndef COMPLEX_HPP
 #define COMPLEX_HPP
 #include <string>
@@ -16,12 +20,12 @@ public:
     ~Complex() = default;         // can be removed but its better practice to keep it
 
     // Getters - all inline for simplicity
-    double get_real() const { return _real; }
-    double get_img() const { return _img; }
+    double getReal() const { return _real; }
+    double getImg() const { return _img; }
 
     // Setters - all inline for simplicity
-    void set_real(double real) { this->_real = real; }
-    void set_img(double img) { this->_img = img; }
+    void setReal(double real) { this->_real = real; }
+    void setImg(double img) { this->_img = img; }
 
     // Getter & Setter - flexible using reference and non-const
     double& real() { return this->_real;}
@@ -84,6 +88,15 @@ public:
 
     bool operator!=(const Complex& c) const {
         return _real != c._real || _img != c._img;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Complex& c) {
+        os << c._real << "+";
+        if (c._img != 1 && c._img != 0){
+            os << c._img;
+        }
+        os << "i";
+        return os;
     }
 
     // Conversion functions
